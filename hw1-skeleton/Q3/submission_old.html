@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<!-- cse6242 -->
+
+<!-- run: http-server & -->
+
+<head>
+  <style>
+    <!-- define CSS rules -->
+  </style>
+  <title>
+      Running Total of TMDb Movies by Year
+  </title>
+</head>
+
+<body>
+
+  <script src="lib/d3/d3.min.js"></script>
+  <script src="lib/d3-dsv/d3-dsv.min.js"></script>
+  <script src="lib/d3-fetch/d3-fetch.min.js"></script>
+
+
+  <script>
+    // define the dimensions and margins for the graph
+    var width = 960
+    var height = 500
+    var margin = {top: 20, right:20, bottom:30, left:40},
+        container_width = 960 - margin.left - margin.right,
+        container_height = 500 - margin.top - margin.bottom;
+
+
+
+
+    // define function to parse time in years format
+    var parse_year = d3.timeParse("%Y")
+	
+
+    // create scales x & y for X and Y axis and set their ranges
+    var x = d3.scaleTime().range(width, 0)
+    var y = d3.scaleLinear().range(0, height)
+
+
+
+    // append svg element to the body of the page
+    // set dimensions and position of the svg element
+    var svg = d3.select("body").append("svg")
+                .attr("width", width)
+                .attr("height", height)
+
+
+    // Get the data
+	var pathToCsv = "q3.csv";		// path to csv
+	
+    d3.dsv(",", pathToCsv, function (d) {
+      return {
+        // format data attributes if required
+        year: d.year,
+        running_total: parseInt(d.running_total)
+      }
+    }).then(function (data) {
+      console.log(data); // you should see the data in your browser's developer tools console 
+      
+      /* Create bar plot using data from csv */
+
+      // set the domains of X and Y scales based on data
+      x.domain(data.map(function(d) {return d.year}));
+      y.domain([0, d3.max(data, function(d) {return d.running_total})]);
+
+      // Add bars to svg - create new elements based on your data
+      svg.selectAll('rect')
+        .data(data)
+        .enter()
+        .append('rect')
+        .attr('x', function (d) { return x(d.year)})
+        .attr('y', function (d) {return  y(d.running_total)})
+        .attr('width', function (d) {return container_width / d.length})
+        .attr('height', function (d) {return container_height - d.running_total})
+
+
+
+      var xAxis = d3.axisBottom().scale(x)
+      var yAxis = d3.axisLeft().scale(y)
+
+      // Add the X Axis
+      svg.append('g')
+        .attr('id', 'x_axis')
+        .attr('transform', 'translate(0,' + container_height)
+        .call(xAxis);
+
+      // Add the text label for X Axis
+      svg.append('text')
+        .attr('id', 'x_axis_label')
+        .attr('text-anchor', 'center')
+        .attr('x', width / 2.5)
+        .attr('y', height - 40)
+        .attr("Year")
+
+      // Add the Y Axis
+      svg.append('g')
+        .attr('id', 'y_axis')
+        .attr(yAxis)
+
+      // Add the text label for Y axis
+      svg.append('text')
+        .attr('id', 'y_axis_label')
+        .attr('text-anchor', 'middle')
+        .attr('transform', 'rotate(-90)')
+        .attr('x', -100)
+        .attr('y', 8)
+        .text('Running Total')
+
+      {#// Add Title above graphs#}
+      {#svg.append("text")#}
+      {#  .attr('text-anchor', "middle")#}
+      {#  .attr('x', width / 2)#}
+      {#  .attr('y', 40)#}
+      {#  .text('Running total of TMDb Movies by Year')#}
+      {##}
+      {#// Add GT Username Below#}
+      {#svg.append('text')#}
+      {#  .attr('id', 'credit')#}
+      {#  .attr('text-anchor', 'end')#}
+      {#  .attr('x', width / 2)#}
+      {#  .attr('y', height - 30)#}
+      {#  .text("kobrien43")#}
+
+
+
+    }).catch(function (error) {
+      console.log(error);
+    });
+
+
+  </script>
+
+</body>
